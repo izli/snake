@@ -1,5 +1,5 @@
 import { snakeCase } from "lodash";
-import { drawCanvas } from "./index.ts";
+import { drawCanvas } from "./index";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "./constants";
 
 export type Snake = {
@@ -93,16 +93,24 @@ function logKey(snake: Snake) {
     console.log(e.code);
     switch (e.code) {
       case "ArrowUp":
-        snake.direction = Direction.Up;
+        if (snake.direction !== Direction.Down) {
+          snake.direction = Direction.Up;
+        }
         break;
       case "ArrowDown":
-        snake.direction = Direction.Down;
+        if (snake.direction !== Direction.Up) {
+          snake.direction = Direction.Down;
+        }
         break;
       case "ArrowRight":
-        snake.direction = Direction.Right;
+        if (snake.direction !== Direction.Left) {
+          snake.direction = Direction.Right;
+        }
         break;
       case "ArrowLeft":
-        snake.direction = Direction.Left;
+        if (snake.direction !== Direction.Right) {
+          snake.direction = Direction.Left;
+        }
         break;
     }
   };
