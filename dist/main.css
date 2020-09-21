@@ -1,0 +1,19 @@
+html,
+body {
+  overflow: hidden;
+  /* position: fixed; */
+  margin: 0px;
+  padding: 0px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.canvas {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.gameContainer {
+  display: flex;
+  flex-direction: column;
+}
