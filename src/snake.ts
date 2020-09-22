@@ -1,6 +1,7 @@
 import { snakeCase } from "lodash";
 import { drawCanvas } from "./index";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "./constants";
+import { Treat, createTreat, drawTreat } from "./treats";
 
 export type Snake = {
   length: number;
@@ -8,7 +9,7 @@ export type Snake = {
   speed: number;
   posX: number;
   posY: number;
-  running: number;
+  hasEaten: boolean;
 };
 
 export enum Direction {
@@ -24,7 +25,7 @@ export function createSnake(
   givenSpd: number = 0,
   posX: number = 30,
   posY: number = 30,
-  isRunning: number = 0
+  hasEaten: boolean = false
 ): Snake {
   return {
     length: givenLength,
@@ -32,14 +33,16 @@ export function createSnake(
     speed: givenSpd,
     posX: posX,
     posY: posY,
-    running: isRunning,
+    hasEaten: hasEaten,
   };
 }
 
 export function moveSnake(
   snake: Snake,
   ctx: CanvasRenderingContext2D,
-  gameBorder: HTMLCanvasElement
+  gameBorder: HTMLCanvasElement,
+  button: HTMLInputElement,
+  treat: Treat
 ) {
   document.addEventListener("keydown", logKey(snake));
   let snakeCrashes = checkIfCrashes(snake, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -52,9 +55,20 @@ export function moveSnake(
     snake.direction = Direction.Right;
     drawCanvas(ctx, gameBorder);
     drawSnake(ctx, snake);
+    drawTreat(ctx, treat);
+    button.disabled = false;
   } else {
     drawSnake(ctx, snake);
-    window.requestAnimationFrame(() => moveSnake(snake, ctx, gameBorder));
+    drawTreat(ctx, treat);
+    let eatsTreat = doesSnakeEatTreat(snake, treat);
+
+    if (eatsTreat) {
+      treat = createTreat();
+    }
+
+    window.requestAnimationFrame(() =>
+      moveSnake(snake, ctx, gameBorder, button, treat)
+    );
   }
 }
 
@@ -65,26 +79,26 @@ export function drawSnake(ctx: CanvasRenderingContext2D, snake: Snake) {
   //Going right
   if (snake.direction == Direction.Right) {
     snake.posX = snake.posX + snake.length;
-    ctx.fillRect(snake.posX, snake.posY, 10, 10);
-    ctx.strokeRect(snake.posX, snake.posY, 10, 10);
+    ctx.fillRect(snake.posX, snake.posY, 12, 12);
+    ctx.strokeRect(snake.posX, snake.posY, 12, 12);
   }
   //Going down
   else if (snake.direction == Direction.Down) {
     snake.posY = snake.posY + snake.length;
-    ctx.fillRect(snake.posX, snake.posY, 10, 10);
-    ctx.strokeRect(snake.posX, snake.posY, 10, 10);
+    ctx.fillRect(snake.posX, snake.posY, 12, 12);
+    ctx.strokeRect(snake.posX, snake.posY, 12, 12);
   }
   //Going left
   else if (snake.direction == Direction.Left) {
     snake.posX = snake.posX - snake.length;
-    ctx.fillRect(snake.posX, snake.posY, 10, 10);
-    ctx.strokeRect(snake.posX, snake.posY, 10, 10);
+    ctx.fillRect(snake.posX, snake.posY, 12, 12);
+    ctx.strokeRect(snake.posX, snake.posY, 12, 12);
   }
   //Going up
   else if (snake.direction == Direction.Up) {
     snake.posY = snake.posY - snake.length;
-    ctx.fillRect(snake.posX, snake.posY, 10, 10);
-    ctx.strokeRect(snake.posX, snake.posY, 10, 10);
+    ctx.fillRect(snake.posX, snake.posY, 12, 12);
+    ctx.strokeRect(snake.posX, snake.posY, 12, 12);
   }
 }
 
@@ -133,5 +147,22 @@ function checkIfCrashes(snake: Snake, boardWidth: number, boardHeight: number) {
     console.log("has crashed");
     return true;
   }
+  return false;
+}
+
+function doesSnakeEatTreat(snake: Snake, treat: Treat) {
+  let minX = treat.treatX - treat.radius * 1.5;
+  let maxX = treat.treatX + treat.radius / 2;
+  let minY = treat.treatY - treat.radius * 1.5;
+  let maxY = treat.treatY + treat.radius / 2;
+  if (
+    minX <= snake.posX &&
+    snake.posX <= maxX &&
+    minY <= snake.posY &&
+    snake.posY <= maxY
+  ) {
+    return true;
+  }
+
   return false;
 }

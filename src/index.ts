@@ -1,6 +1,7 @@
 import * as _ from "lodash";
 import { Snake, createSnake, drawSnake, moveSnake } from "./snake";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "./constants";
+import { Treat, createTreat, drawTreat } from "./treats";
 
 mainApp();
 
@@ -8,10 +9,12 @@ function mainApp() {
   const gameBorder = document.getElementById("myCanvas") as HTMLCanvasElement;
   const ctx = gameBorder.getContext("2d");
   let snake: Snake = createSnake();
+  let treat: Treat = createTreat();
   drawCanvas(ctx, gameBorder);
   drawSnake(ctx, snake);
+  drawTreat(ctx, treat);
 
-  let button = document.getElementById("startButton");
+  let button = <HTMLInputElement>document.getElementById("startButton");
   // let handler = function () {
   //   startGame(snake, ctx, gameBorder);
   // };
@@ -23,7 +26,8 @@ function mainApp() {
 
   if (button) {
     button.addEventListener("click", function () {
-      startGame(snake, ctx, gameBorder);
+      button.disabled = true;
+      startGame(snake, ctx, gameBorder, button, treat);
     });
   }
 }
@@ -31,11 +35,14 @@ function mainApp() {
 function startGame(
   snake: Snake,
   ctx: CanvasRenderingContext2D,
-  gameBorder: HTMLCanvasElement
+  gameBorder: HTMLCanvasElement,
+  button: HTMLInputElement,
+  treat: Treat
 ) {
   snake.speed = 3;
-  snake.running = 1;
-  window.requestAnimationFrame(() => moveSnake(snake, ctx, gameBorder));
+  window.requestAnimationFrame(() =>
+    moveSnake(snake, ctx, gameBorder, button, treat)
+  );
 }
 
 export function drawCanvas(
