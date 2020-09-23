@@ -1,15 +1,14 @@
-import { snakeCase } from "lodash";
 import { drawCanvas } from "./index";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "./constants";
-import { Treat, createTreat, drawTreat } from "./treats";
+import { Treat, createTreat, drawTreat, doesSnakeEatTreat } from "./treats";
 
 export type Snake = {
-  length: number;
   direction: string;
   speed: number;
   posX: number;
   posY: number;
-  hasEaten: boolean;
+  size: number;
+  hasTurned: boolean;
 };
 
 export enum Direction {
@@ -19,150 +18,266 @@ export enum Direction {
   Down = "down",
 }
 
+// givenLength: number = 1,
+//   givenDir: Direction = Direction.Right,
+//   givenSpd: number = 0,
+//   posX: number = 30,
+//   posY: number = 30
 export function createSnake(
-  givenLength: number = 3,
-  givenDir: Direction = Direction.Right,
-  givenSpd: number = 0,
-  posX: number = 30,
-  posY: number = 30,
-  hasEaten: boolean = false
+  givenDir: Direction,
+  givenSpd: number,
+  posX: number,
+  posY: number,
+  givenSize: number,
+  givenTurned: boolean
 ): Snake {
   return {
-    length: givenLength,
     direction: givenDir,
     speed: givenSpd,
     posX: posX,
     posY: posY,
-    hasEaten: hasEaten,
+    size: givenSize,
+    hasTurned: givenTurned,
   };
 }
 
 export function moveSnake(
-  snake: Snake,
+  snakeArr: Array<Snake>,
   ctx: CanvasRenderingContext2D,
   gameBorder: HTMLCanvasElement,
   button: HTMLInputElement,
   treat: Treat
 ) {
-  document.addEventListener("keydown", logKey(snake));
-  let snakeCrashes = checkIfCrashes(snake, CANVAS_WIDTH, CANVAS_HEIGHT);
+  document.addEventListener("keydown", logKey(snakeArr));
+  let snakeCrashes = checkIfCrashes(snakeArr, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   if (snakeCrashes == true) {
     ctx.clearRect(0, 0, 600, 600);
-    snake.posX = 30;
-    snake.posY = 30;
-    snake.speed = 0;
-    snake.direction = Direction.Right;
+    snakeArr.splice(1);
+    // hasTurned = false;
+    snakeArr[0].posX = 30;
+    snakeArr[0].posY = 30;
+    snakeArr[0].speed = 0;
+    snakeArr[0].direction = Direction.Right;
+    snakeArr[0].hasTurned = false;
     drawCanvas(ctx, gameBorder);
-    drawSnake(ctx, snake);
+    drawSnake(ctx, snakeArr);
     drawTreat(ctx, treat);
     button.disabled = false;
   } else {
-    drawSnake(ctx, snake);
+    drawSnake(ctx, snakeArr);
     drawTreat(ctx, treat);
-    let eatsTreat = doesSnakeEatTreat(snake, treat);
+    let eatsTreat = doesSnakeEatTreat(snakeArr[0], treat);
 
     if (eatsTreat) {
       treat = createTreat();
+      let newSnakePart = createAnotherSnakePart(snakeArr);
+      snakeArr.push(newSnakePart);
     }
 
     window.requestAnimationFrame(() =>
-      moveSnake(snake, ctx, gameBorder, button, treat)
+      moveSnake(snakeArr, ctx, gameBorder, button, treat)
     );
   }
 }
 
-export function drawSnake(ctx: CanvasRenderingContext2D, snake: Snake) {
+export function drawSnake(
+  ctx: CanvasRenderingContext2D,
+  snakeArr: Array<Snake>
+) {
   ctx.fillStyle = "green";
   ctx.clearRect(1, 1, 598, 398);
+  let prevX = snakeArr[0].posX;
+  let prevY = snakeArr[0].posY;
+  let prevD = snakeArr[0].direction;
 
-  //Going right
-  if (snake.direction == Direction.Right) {
-    snake.posX = snake.posX + snake.length;
-    ctx.fillRect(snake.posX, snake.posY, 12, 12);
-    ctx.strokeRect(snake.posX, snake.posY, 12, 12);
+  //CASE Snake hasn't turned
+  // if (snakeArr[0].hasTurned == false) {
+  for (let i = snakeArr.length - 1; i > -1; i--) {
+    if (i == 0) {
+      //Snake's head's movement
+      //Going right
+      if (snakeArr[i].direction == Direction.Right) {
+        snakeArr[i].posX = snakeArr[i].posX + snakeArr[i].size;
+        drawBoxAndBorder(snakeArr[i], ctx);
+      }
+      //Going down
+      else if (snakeArr[i].direction == Direction.Down) {
+        snakeArr[i].posY = snakeArr[i].posY + snakeArr[i].size;
+        drawBoxAndBorder(snakeArr[i], ctx);
+      }
+      //Going left
+      else if (snakeArr[i].direction == Direction.Left) {
+        snakeArr[i].posX = snakeArr[i].posX - snakeArr[i].size;
+        drawBoxAndBorder(snakeArr[i], ctx);
+      }
+      //Going up
+      else if (snakeArr[i].direction == Direction.Up) {
+        snakeArr[i].posY = snakeArr[i].posY - snakeArr[i].size;
+        drawBoxAndBorder(snakeArr[i], ctx);
+      }
+    } else {
+      //Moves to the exact place of previous SnakePart and gets its direction
+      snakeArr[i].posX = snakeArr[i - 1].posX;
+      snakeArr[i].posY = snakeArr[i - 1].posY;
+      snakeArr[i].direction = snakeArr[i - 1].direction;
+      drawBoxAndBorder(snakeArr[i], ctx);
+    }
   }
-  //Going down
-  else if (snake.direction == Direction.Down) {
-    snake.posY = snake.posY + snake.length;
-    ctx.fillRect(snake.posX, snake.posY, 12, 12);
-    ctx.strokeRect(snake.posX, snake.posY, 12, 12);
-  }
-  //Going left
-  else if (snake.direction == Direction.Left) {
-    snake.posX = snake.posX - snake.length;
-    ctx.fillRect(snake.posX, snake.posY, 12, 12);
-    ctx.strokeRect(snake.posX, snake.posY, 12, 12);
-  }
-  //Going up
-  else if (snake.direction == Direction.Up) {
-    snake.posY = snake.posY - snake.length;
-    ctx.fillRect(snake.posX, snake.posY, 12, 12);
-    ctx.strokeRect(snake.posX, snake.posY, 12, 12);
-  }
+  // } else {
+  //   for (let i = snakeArr.length - 1; i == 0; i--) {
+  //     if (i == 0) {
+  //       //Turned right
+  //       if (snakeArr[i].direction == Direction.Right) {
+  //         snakeArr[i].posX = snakeArr[i].posX + snakeArr[i].size;
+  //         snakeArr[i].direction == Direction.Right;
+  //         drawBoxAndBorder(snakeArr[i], ctx);
+  //       }
+  //       //Turned down
+  //       else if (snakeArr[i].direction == Direction.Down) {
+  //         snakeArr[i].posY = snakeArr[i].posY + snakeArr[i].size;
+  //         drawBoxAndBorder(snakeArr[i], ctx);
+  //       }
+  //       //Turned left
+  //       else if (snakeArr[i].direction == Direction.Left) {
+  //         snakeArr[i].posX = snakeArr[i].posX - snakeArr[i].size;
+  //         drawBoxAndBorder(snakeArr[i], ctx);
+  //       }
+  //       //Turned up
+  //       else if (snakeArr[i].direction == Direction.Up) {
+  //         snakeArr[i].posY = snakeArr[i].posY - snakeArr[i].size;
+  //         drawBoxAndBorder(snakeArr[i], ctx);
+  //       }
+  //     }
+  //   }
+  // }
 }
 
-function logKey(snake: Snake) {
+function drawBoxAndBorder(snake: Snake, ctx: CanvasRenderingContext2D) {
+  ctx.fillRect(snake.posX, snake.posY, snake.size, snake.size);
+  ctx.strokeRect(snake.posX, snake.posY, snake.size, snake.size);
+}
+
+function logKey(snakeArr: Array<Snake>) {
   return (e: KeyboardEvent) => {
-    console.log(e.code);
     switch (e.code) {
       case "ArrowUp":
-        if (snake.direction !== Direction.Down) {
-          snake.direction = Direction.Up;
+        if (snakeArr[0].direction !== Direction.Down) {
+          if (snakeArr[0].direction == Direction.Up) {
+            snakeArr[0].hasTurned = false;
+          } else {
+            snakeArr[0].hasTurned = true;
+          }
+          snakeArr[0].direction = Direction.Up;
+          return true;
         }
         break;
       case "ArrowDown":
-        if (snake.direction !== Direction.Up) {
-          snake.direction = Direction.Down;
+        if (snakeArr[0].direction !== Direction.Up) {
+          if (snakeArr[0].direction == Direction.Down) {
+            snakeArr[0].hasTurned = false;
+          } else {
+            snakeArr[0].hasTurned = true;
+          }
+          snakeArr[0].direction = Direction.Down;
+          return true;
         }
         break;
       case "ArrowRight":
-        if (snake.direction !== Direction.Left) {
-          snake.direction = Direction.Right;
+        if (snakeArr[0].direction !== Direction.Left) {
+          if (snakeArr[0].direction == Direction.Right) {
+            snakeArr[0].hasTurned = false;
+          } else {
+            snakeArr[0].hasTurned = true;
+          }
+          snakeArr[0].direction = Direction.Right;
+          return true;
         }
         break;
       case "ArrowLeft":
-        if (snake.direction !== Direction.Right) {
-          snake.direction = Direction.Left;
+        if (snakeArr[0].direction !== Direction.Right) {
+          if (snakeArr[0].direction == Direction.Left) {
+            snakeArr[0].hasTurned = false;
+          } else {
+            snakeArr[0].hasTurned = true;
+          }
+          snakeArr[0].direction = Direction.Left;
+          return true;
         }
         break;
     }
   };
 }
 
-function checkIfCrashes(snake: Snake, boardWidth: number, boardHeight: number) {
-  if (snake.direction == Direction.Right && snake.posX >= boardWidth - 9) {
-    console.log("has crashed");
+function checkIfCrashes(
+  snakeArr: Array<Snake>,
+  boardWidth: number,
+  boardHeight: number
+) {
+  if (
+    snakeArr[0].direction == Direction.Right &&
+    snakeArr[0].posX >= boardWidth - 9
+  ) {
     return true;
   }
-  if (snake.direction == Direction.Down && snake.posY >= boardHeight - 10) {
-    console.log("has crashed");
+  if (
+    snakeArr[0].direction == Direction.Down &&
+    snakeArr[0].posY >= boardHeight - 10
+  ) {
     return true;
   }
-  if (snake.direction == Direction.Left && snake.posX <= 0) {
-    console.log("has crashed");
+  if (snakeArr[0].direction == Direction.Left && snakeArr[0].posX <= 0) {
     return true;
   }
-  if (snake.direction == Direction.Up && snake.posY <= 0) {
-    console.log("has crashed");
+  if (snakeArr[0].direction == Direction.Up && snakeArr[0].posY <= 0) {
     return true;
   }
   return false;
 }
 
-function doesSnakeEatTreat(snake: Snake, treat: Treat) {
-  let minX = treat.treatX - treat.radius * 1.5;
-  let maxX = treat.treatX + treat.radius / 2;
-  let minY = treat.treatY - treat.radius * 1.5;
-  let maxY = treat.treatY + treat.radius / 2;
-  if (
-    minX <= snake.posX &&
-    snake.posX <= maxX &&
-    minY <= snake.posY &&
-    snake.posY <= maxY
-  ) {
-    return true;
-  }
+function createAnotherSnakePart(snakeArr: Array<Snake>): Snake {
+  let length = snakeArr.length;
+  let lastSnake = snakeArr[length - 1];
+  let lastSnakeDirection = snakeArr[length - 1].direction;
 
-  return false;
+  if (lastSnakeDirection == Direction.Up) {
+    return {
+      direction: lastSnake.direction,
+      speed: lastSnake.speed,
+      posX: lastSnake.posX,
+      posY: lastSnake.posY + lastSnake.size,
+      size: lastSnake.size,
+      hasTurned: lastSnake.hasTurned,
+    };
+  }
+  if (lastSnakeDirection == Direction.Right) {
+    return {
+      direction: lastSnake.direction,
+      speed: lastSnake.speed,
+      posX: lastSnake.posX - 12,
+      posY: lastSnake.posY,
+      size: lastSnake.size,
+      hasTurned: lastSnake.hasTurned,
+    };
+  }
+  if (lastSnakeDirection == Direction.Down) {
+    return {
+      direction: lastSnake.direction,
+      speed: lastSnake.speed,
+      posX: lastSnake.posX,
+      posY: lastSnake.posY - lastSnake.size,
+      size: lastSnake.size,
+      hasTurned: lastSnake.hasTurned,
+    };
+  }
+  if (lastSnakeDirection == Direction.Left) {
+    return {
+      direction: lastSnake.direction,
+      speed: lastSnake.speed,
+      posX: lastSnake.posX + lastSnake.size,
+      posY: lastSnake.posY,
+      size: lastSnake.size,
+      hasTurned: lastSnake.hasTurned,
+    };
+  }
 }

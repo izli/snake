@@ -1,3 +1,4 @@
+import { Snake } from "./snake";
 export type Treat = {
   treatX: number;
   treatY: number;
@@ -23,18 +24,9 @@ function getRandomIntInclusive(max: number, min: number) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
-// export function createTreat(ctx: CanvasRenderingContext2D) {
-//   let randomX = getRandomIntInclusive(0, 600);
-//   let randomY = getRandomIntInclusive(0, 400);
-//   ctx.fillStyle = "red";
-//   ctx.beginPath();
-//   ctx.arc(randomX, randomY, 6, 0, Math.PI * 2, true);
-// }
-
 export function drawTreat(ctx: CanvasRenderingContext2D, treatPos: Treat) {
   ctx.fillStyle = "red";
   ctx.beginPath();
-  //   ctx.moveTo(treatPos.treatX, treatPos.treatY);
   ctx.arc(
     treatPos.treatX,
     treatPos.treatY,
@@ -44,4 +36,21 @@ export function drawTreat(ctx: CanvasRenderingContext2D, treatPos: Treat) {
     true
   );
   ctx.fill();
+}
+
+export function doesSnakeEatTreat(snake: Snake, treat: Treat) {
+  let minX = treat.treatX - treat.radius * 1.5;
+  let maxX = treat.treatX + treat.radius / 2;
+  let minY = treat.treatY - treat.radius * 1.5;
+  let maxY = treat.treatY + treat.radius / 2;
+  if (
+    minX <= snake.posX &&
+    snake.posX <= maxX &&
+    minY <= snake.posY &&
+    snake.posY <= maxY
+  ) {
+    return true;
+  }
+
+  return false;
 }
