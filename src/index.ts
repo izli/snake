@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import { Direction, Snake, createSnake, drawSnake, handleTime } from "./snake";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "./constants";
 import { Treat, createTreat, drawTreat } from "./treats";
