@@ -61,7 +61,6 @@ export function handleTime(
         handleTime(snakeArr, ctx, gameBorder, button, treat);
       });
     }
-    // requestAnimationFrame(handleTime);
   }, 2000 / snakeArr[0].speed);
 }
 
