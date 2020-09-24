@@ -12,8 +12,6 @@ export function createTreat(
   return {
     treatX: randomX,
     treatY: randomY,
-    // treatX: 60,
-    // treatY: 30,
     radius: 6,
   };
 }
