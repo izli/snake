@@ -18,11 +18,6 @@ export enum Direction {
   Down = "down",
 }
 
-// givenLength: number = 1,
-//   givenDir: Direction = Direction.Right,
-//   givenSpd: number = 0,
-//   posX: number = 30,
-//   posY: number = 30
 export function createSnake(
   givenDir: Direction,
   givenSpd: number,
@@ -41,6 +36,35 @@ export function createSnake(
   };
 }
 
+export function handleTime(
+  snakeArr: Array<Snake>,
+  ctx: CanvasRenderingContext2D,
+  gameBorder: HTMLCanvasElement,
+  button: HTMLInputElement,
+  treat: Treat
+) {
+  setTimeout(function () {
+    let isRunning = moveSnake(snakeArr, ctx, gameBorder, button, treat);
+
+    let eatsTreat = doesSnakeEatTreat(snakeArr[0], treat);
+
+    if (eatsTreat) {
+      treat = createTreat();
+      let newSnakePart = createAnotherSnakePart(snakeArr);
+      snakeArr.push(newSnakePart);
+      for (let i = 0; i < snakeArr.length; i++) {
+        snakeArr[i].speed = snakeArr[i].speed + 10;
+      }
+    }
+    if (isRunning) {
+      window.requestAnimationFrame(() => {
+        handleTime(snakeArr, ctx, gameBorder, button, treat);
+      });
+    }
+    // requestAnimationFrame(handleTime);
+  }, 2000 / snakeArr[0].speed);
+}
+
 export function moveSnake(
   snakeArr: Array<Snake>,
   ctx: CanvasRenderingContext2D,
@@ -54,30 +78,20 @@ export function moveSnake(
   if (snakeCrashes == true) {
     ctx.clearRect(0, 0, 600, 600);
     snakeArr.splice(1);
-    // hasTurned = false;
-    snakeArr[0].posX = 30;
-    snakeArr[0].posY = 30;
-    snakeArr[0].speed = 0;
+    snakeArr[0].posX = 24;
+    snakeArr[0].posY = 24;
+    snakeArr[0].speed = 10;
     snakeArr[0].direction = Direction.Right;
     snakeArr[0].hasTurned = false;
     drawCanvas(ctx, gameBorder);
     drawSnake(ctx, snakeArr);
     drawTreat(ctx, treat);
     button.disabled = false;
+    return false;
   } else {
     drawSnake(ctx, snakeArr);
     drawTreat(ctx, treat);
-    let eatsTreat = doesSnakeEatTreat(snakeArr[0], treat);
-
-    if (eatsTreat) {
-      treat = createTreat();
-      let newSnakePart = createAnotherSnakePart(snakeArr);
-      snakeArr.push(newSnakePart);
-    }
-
-    window.requestAnimationFrame(() =>
-      moveSnake(snakeArr, ctx, gameBorder, button, treat)
-    );
+    return true;
   }
 }
 
@@ -86,13 +100,12 @@ export function drawSnake(
   snakeArr: Array<Snake>
 ) {
   ctx.fillStyle = "green";
-  ctx.clearRect(1, 1, 598, 398);
-  let prevX = snakeArr[0].posX;
-  let prevY = snakeArr[0].posY;
-  let prevD = snakeArr[0].direction;
+  ctx.clearRect(1, 1, 598, 406);
+  // let prevX = snakeArr[0].posX;
+  // let prevY = snakeArr[0].posY;
+  // let prevD = snakeArr[0].direction;
 
   //CASE Snake hasn't turned
-  // if (snakeArr[0].hasTurned == false) {
   for (let i = snakeArr.length - 1; i > -1; i--) {
     if (i == 0) {
       //Snake's head's movement
@@ -124,33 +137,6 @@ export function drawSnake(
       drawBoxAndBorder(snakeArr[i], ctx);
     }
   }
-  // } else {
-  //   for (let i = snakeArr.length - 1; i == 0; i--) {
-  //     if (i == 0) {
-  //       //Turned right
-  //       if (snakeArr[i].direction == Direction.Right) {
-  //         snakeArr[i].posX = snakeArr[i].posX + snakeArr[i].size;
-  //         snakeArr[i].direction == Direction.Right;
-  //         drawBoxAndBorder(snakeArr[i], ctx);
-  //       }
-  //       //Turned down
-  //       else if (snakeArr[i].direction == Direction.Down) {
-  //         snakeArr[i].posY = snakeArr[i].posY + snakeArr[i].size;
-  //         drawBoxAndBorder(snakeArr[i], ctx);
-  //       }
-  //       //Turned left
-  //       else if (snakeArr[i].direction == Direction.Left) {
-  //         snakeArr[i].posX = snakeArr[i].posX - snakeArr[i].size;
-  //         drawBoxAndBorder(snakeArr[i], ctx);
-  //       }
-  //       //Turned up
-  //       else if (snakeArr[i].direction == Direction.Up) {
-  //         snakeArr[i].posY = snakeArr[i].posY - snakeArr[i].size;
-  //         drawBoxAndBorder(snakeArr[i], ctx);
-  //       }
-  //     }
-  //   }
-  // }
 }
 
 function drawBoxAndBorder(snake: Snake, ctx: CanvasRenderingContext2D) {
@@ -216,20 +202,20 @@ function checkIfCrashes(
 ) {
   if (
     snakeArr[0].direction == Direction.Right &&
-    snakeArr[0].posX >= boardWidth - 9
+    snakeArr[0].posX >= boardWidth - 12
   ) {
     return true;
   }
   if (
     snakeArr[0].direction == Direction.Down &&
-    snakeArr[0].posY >= boardHeight - 10
+    snakeArr[0].posY >= boardHeight - 12
   ) {
     return true;
   }
-  if (snakeArr[0].direction == Direction.Left && snakeArr[0].posX <= 0) {
+  if (snakeArr[0].direction == Direction.Left && snakeArr[0].posX <= 1) {
     return true;
   }
-  if (snakeArr[0].direction == Direction.Up && snakeArr[0].posY <= 0) {
+  if (snakeArr[0].direction == Direction.Up && snakeArr[0].posY <= 1) {
     return true;
   }
   return false;
