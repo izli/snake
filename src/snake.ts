@@ -100,9 +100,6 @@ export function drawSnake(
 ) {
   ctx.fillStyle = "green";
   ctx.clearRect(1, 1, 598, 406);
-  // let prevX = snakeArr[0].posX;
-  // let prevY = snakeArr[0].posY;
-  // let prevD = snakeArr[0].direction;
 
   //CASE Snake hasn't turned
   for (let i = snakeArr.length - 1; i > -1; i--) {
