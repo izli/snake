@@ -53,7 +53,7 @@ export function handleTime(
       let newSnakePart = createAnotherSnakePart(snakeArr);
       snakeArr.push(newSnakePart);
       for (let i = 0; i < snakeArr.length; i++) {
-        snakeArr[i].speed = snakeArr[i].speed + 10;
+        snakeArr[i].speed = snakeArr[i].speed + 5;
       }
     }
     if (isRunning) {
